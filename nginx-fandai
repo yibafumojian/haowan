@@ -1,0 +1,167 @@
+#user www-data www-data;
+#user  nobody;
+worker_processes  1;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+#pid        logs/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    upstream www.google.com {
+	#中国香港 google.com
+	server 216.58.221.68:443 weight=6;
+	#中国台湾 google.com
+	server 74.125.23.99:443 weight=5;
+	#日本东京都东京 google.com
+	server 172.217.25.68:443 weight=4;
+	#日本东京都东京 google.com
+	server 216.58.200.196:443 weight=4;
+	#日本大阪府大阪 google.com
+	server 216.58.197.4:443 weight=3;
+	#新加坡 google.com
+	server 74.125.130.147:443 weight=2;
+	#美国 我的小鸡 ping www.google.com 所得
+	server 216.58.217.196:443 weight=1;
+	server 172.217.11.164:443 weight=1;
+	#美国 google.com
+	server 74.125.28.104:443 weight=1;
+	#美国 google.com
+	server 74.125.28.147:443 weight=1;
+	#美国华盛顿州西雅图 google.com
+	server 172.217.3.196:443 weight=1;
+    }
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+    proxy_cache_path  /home/nginx/proxy_cache/cache levels=1:2 keys_zone=proxycache:60m max_size=120m inactive=2h use_temp_path=on;
+    proxy_temp_path   /home/nginx/proxy_cache/temp;
+    proxy_cache_key   $host$uri;
+    #access_log  logs/access.log  main;
+
+    #sendfile        on;
+    #tcp_nopush     on;
+    #auth_basic "Authorization";
+    #auth_basic_user_file /root/passwdfile;
+    #keepalive_timeout  0;
+    #keepalive_timeout  65;
+
+    #gzip  on;
+
+    server {
+        listen   80;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+	return  301  https://www.meixxxxxxong.win$request_uri;
+        location / {
+            root   html;
+            index  index.html index.htm;
+            
+        }
+	#proxy_cache_path  /home/nginx/proxy_cache/cache levels=1:2 keys_zone=proxycache:60m max_size=120m inactive=2h use_temp_path=on;
+	#proxy_temp_path   /home/nginx/proxy_cache/temp;
+	#proxy_cache_key   $host$uri;
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+        #
+        #location ~ \.php$ {
+        #    proxy_pass   http://127.0.0.1;
+        #}
+
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        #location ~ \.php$ {
+        #    root           html;
+        #    fastcgi_pass   127.0.0.1:9000;
+        #    fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        #    include        fastcgi_params;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #    deny  all;
+        #}
+    }
+
+
+    # another virtual host using mix of IP-, name-, and port-based configuration
+    #
+    #server {
+    #    listen       8000;
+    #    listen       somename:8080;
+    #    server_name  somename  alias  another.alias;
+
+    #    location / {
+    #        root   html;
+    #        index  index.html index.htm;
+    #    }
+    #}
+
+
+    # HTTPS server
+    #
+    server {
+        listen       443 ssl;
+        server_name  www.meisxxxong.win;
+		ssl on;
+		ssl_protocols TLSv1.2;
+        ssl_certificate      /root/.acme.sh/meishxxng.win/fullchain.cer;
+        ssl_certificate_key  /root/.acme.sh/meishxxong.win/meishayong.win.key;
+
+        ssl_session_cache    shared:SSL:1m;
+        ssl_session_timeout  5m;
+
+        ssl_ciphers  HIGH:!aNULL:!MD5:!EXPORT56:!EXP;
+        ssl_prefer_server_ciphers  on;
+
+        location / {
+            proxy_pass  https://www.google.com;
+            sub_filter  www.google.com www.meixxxxyong.win;
+			sub_filter_once  off;
+			proxy_set_header  Host          "www.google.com";
+			proxy_set_header  Referer       $http_referer;
+			proxy_set_header  X-Real-IP     $remote_addr;
+			proxy_set_header  User-Agent    $http_user_agent;
+		        proxy_set_header  X-Forwarded-For   $proxy_add_x_forwarded_for;
+			proxy_set_header  X-Forwarded-Proto https;
+			proxy_set_header  Accept-Encoding   "";
+			proxy_set_header  Accept-Language   "zh-CN";
+			proxy_cookie_domain  www.google.com www,mexxxong.win;
+			proxy_set_header  Cookie            "PREF=ID=047808f19f6de346:U=0f62f33dd8549d11:FF=2:LD=en-US:NW=1:TM=1325338577:LM=1332142444:GM=1:SG=2:S=rE0SyJh2W1IQ-Maw";
+	
+			proxy_cache                 proxycache;
+			proxy_cache_valid           304 2h;
+			proxy_cache_valid           403 444 2h;
+			proxy_cache_valid           404 2h;
+			proxy_cache_valid           500 502 2h;
+			#proxy_cache_use_stale       invalid_header http_404 http_500 http_502;
+			proxy_cache_use_stale updating error timeout invalid_header http_500 http_502;
+			proxy_cache_lock            on;
+			proxy_cache_lock_timeout    5s;
+        }
+        #auth_basic "Authorization";
+        #auth_basic_user_file /root/passwdfile;
+    }
+}
